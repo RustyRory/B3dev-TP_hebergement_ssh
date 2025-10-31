@@ -57,3 +57,63 @@ NETWORK ID     NAME      DRIVER    SCOPE
 03a8a6a5f64a   none      null      local
 8bdd9361b933   ssh-net   bridge    local
 ```
+
+# Étape 1 — Construire l'image du serveur SSH
+
+Créez un fichier `Dockerfile.server` contenant :
+
+```bash
+FROM ubuntu:24.04
+RUN apt update \
+&& apt install -y openssh-server sudo \
+&& mkdir /var/run/sshd
+# Crée un utilisateur non-root "student"
+RUN useradd -m student \
+&& echo "student:password" | chpasswd \
+&& adduser student sudo
+# Active l'authentification par mot de passe (temporaire pour le TP)
+RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config \
+&& sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]
+```
+
+Construisez l'image Docker du serveur :
+
+```bash
+$ sudo docker build -t ssh-server -f Dockerfile.server .
+[+] Building 33.7s (8/8) FINISHED                                                                                                                 docker:default
+ => [internal] load build definition from Dockerfile.server                                                                                                 0.0s
+ => => transferring dockerfile: 565B                                                                                                                        0.0s
+ => [internal] load metadata for docker.io/library/ubuntu:24.04                                                                                             1.4s
+ => [internal] load .dockerignore                                                                                                                           0.0s
+ => => transferring context: 2B                                                                                                                             0.0s
+ => [1/4] FROM docker.io/library/ubuntu:24.04@sha256:66460d557b25769b102175144d538d88219c077c678a49af4afca6fbfc1b5252                                       1.8s
+ => => resolve docker.io/library/ubuntu:24.04@sha256:66460d557b25769b102175144d538d88219c077c678a49af4afca6fbfc1b5252                                       0.0s
+ => => sha256:66460d557b25769b102175144d538d88219c077c678a49af4afca6fbfc1b5252 6.69kB / 6.69kB                                                              0.0s
+ => => sha256:d22e4fb389065efa4a61bb36416768698ef6d955fe8a7e0cdb3cd6de80fa7eec 424B / 424B                                                                  0.0s
+ => => sha256:97bed23a34971024aa8d254abbe67b7168772340d1f494034773bc464e8dd5b6 2.30kB / 2.30kB                                                              0.0s
+ => => sha256:4b3ffd8ccb5201a0fc03585952effb4ed2d1ea5e704d2e7330212fb8b16c86a3 29.72MB / 29.72MB                                                            0.9s
+ => => extracting sha256:4b3ffd8ccb5201a0fc03585952effb4ed2d1ea5e704d2e7330212fb8b16c86a3                                                                   0.7s
+ => [2/4] RUN apt update && apt install -y openssh-server sudo && mkdir /var/run/sshd                                                                      28.5s
+ => [3/4] RUN useradd -m student && echo "student:password" | chpasswd && adduser student sudo                                                              0.4s 
+ => [4/4] RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config && sed -i 's/PermitRootLogin prohibit-password/Permi  0.2s 
+ => exporting to image                                                                                                                                      1.3s 
+ => => exporting layers                                                                                                                                     1.3s 
+ => => writing image sha256:2526a34a3d53f692492d246991a7ee6d4a0b1dcdee841cd99a74ccb94f0b8fcc                                                                0.0s
+ => => naming to docker.io/library/ssh-server                                    
+```
+
+ Lancez le conteneur serveur en arrière-plan :
+
+```bash
+$ sudo docker run -d --name ssh-server --network ssh-net ssh-server
+c79f65000183271437044f7b0ba8b8fd85454cd911035ca3d0edeb21450d24db
+```
+
+Vérifiez que le service SSH est bien démarré :
+
+```bash
+$ sudo docker exec -it ssh-server ps aux | grep sshd
+root           1  0.0  0.0  12020  7936 ?        Ss   15:12   0:00 sshd: /usr/sb
+```
