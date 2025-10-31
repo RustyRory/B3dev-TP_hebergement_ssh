@@ -167,3 +167,46 @@ PING ssh-server (172.18.0.2) 56(84) bytes of data.
 rtt min/avg/max/mdev = 0.053/0.137/0.222/0.084 ms
 root@2f7570d214d0:~# 
 ```
+
+# Étape 3 — Connexion SSH par mot de passe
+
+Depuis le terminal du client, initiez une connexion SSH :
+
+```bash
+root@2f7570d214d0:~# ssh student@ssh-server
+The authenticity of host 'ssh-server (172.18.0.2)' can't be established.
+ED25519 key fingerprint is SHA256:EIaFXNDSzeEFV5NPVhpVl5FHGZYj0BfpCFWuqIc6uio.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added 'ssh-server' (ED25519) to the list of known hosts.
+student@ssh-server's password: : 
+Welcome to Ubuntu 24.04.3 LTS (GNU/Linux 6.8.0-87-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+This system has been minimized by removing packages and content that are
+not required on a system that users do not log into.
+
+To restore this content, you can run the 'unminimize' command.
+
+The programs included with the Ubuntu system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by
+applicable law.
+
+$ 
+```
+
+Vérifiez que vous êtes bien connecté sur le serveur :
+
+```bash
+$ whoami
+student
+$ hostname
+c79f65000183
+```
+
