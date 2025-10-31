@@ -210,3 +210,72 @@ $ hostname
 c79f65000183
 ```
 
+# Étape 4 — Connexion SSH par clé publique
+
+Toujours depuis le conteneur client, générez une paire de clés RSA :
+
+```bash
+root@2f7570d214d0:~# ssh-keygen -t rsa -b 4096 -C "student@docker"
+Generating public/private rsa key pair.
+Enter file in which to save the key (/root/.ssh/id_rsa): 
+Enter passphrase (empty for no passphrase): 
+Enter same passphrase again: 
+Your identification has been saved in /root/.ssh/id_rsa
+Your public key has been saved in /root/.ssh/id_rsa.pub
+The key fingerprint is:
+SHA256:Uz2IfuqI85pxxchPfFPMduc6zEIFOlU8kOBpeNk+ETk student@docker
+The key's randomart image is:
++---[RSA 4096]----+
+|          ..=*.  |
+|         + @Eoo  |
+|        o @ X.o..|
+|     . = + = = o |
+|      o S + +   .|
+|       + = o + . |
+|    . . o   . =  |
+|    .= o     . . |
+|    ++o .        |
++----[SHA256]-----+
+```
+
+Copiez la clé publique vers le serveur :
+
+```bash
+root@2f7570d214d0:~# ssh-copy-id student@ssh-server
+/usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/root/.ssh/id_rsa.pub"
+/usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
+/usr/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys
+student@ssh-server's password: 
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'student@ssh-server'"
+and check to make sure that only the key(s) you wanted were added.
+
+root@2f7570d214d0:~# 
+```
+
+Testez la connexion sans mot de passe :
+
+```bash
+root@2f7570d214d0:~# ssh student@ssh-server
+Welcome to Ubuntu 24.04.3 LTS (GNU/Linux 6.8.0-87-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+This system has been minimized by removing packages and content that are
+not required on a system that users do not log into.
+
+To restore this content, you can run the 'unminimize' command.
+Last login: Fri Oct 31 15:34:06 2025 from 172.18.0.3
+```
+
+Vérifiez sur le serveur que la clé a été enregistrée :
+
+```bash
+$ cat ~/.ssh/authorized_keys
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDAGgbOeITWoqhDIKGL7iAcLV8oQTZfNG7t3zsoHQz4UgEwJkCdvpzXXd9p92qJRy0nfh1PN/wcvaYrOkP1MmnrFur+8ECb3GQpeBP/TO8bIdSdwN/Haazk4jdYzCbEu+2A0L7f63iC+F2mYsEXrd4+FLgbciYmXPo51M58zYqSS7++JF29sf4cjV8vA+eaMmwqpaQU9Vfpz+OiHr/O43+/SueaWM3x+sy+1O/G4bcq1Gb6LPH4u+O38n4W0QEH+WkA9ralcEkvJKqSYEbQJqJpflyZUdkRI3KxInMEgIfaVxnHoKaWD81FwAysstxNdDx7LddEdtqYh484r61QU4yTaS9NNMPvVCyW1H25UIYY2h3BpJGGKTtSwfR+Cfk59N92j4B8KkEH0e6djnOwUt+4sbNLGJXzsnOof+Ax+dvMCLId5VxPCj3IqGaLbwObQakxtrCz4vG3v7s+visrdJy+y3pqPMSxt811kAIgI7aaE2yiKBPgoRwMoTzcARbdWo4Jgd6WbY+hbn71DPHjcKFPCTUIvOHrGqVMd95/mZj50NRBpFOsU8EkaKLHSfxCiEbnrhFtQxE3nVCqWHdLZj7kCrGaOrXc63H5AEnBHd33JHZuxHqjrvWfcD2u+AXDzUnH7Y2Y000rdP2OyCWyTsUT3gsNxWKsLifK7GJDW3qeRw== student@docker
+```
+
