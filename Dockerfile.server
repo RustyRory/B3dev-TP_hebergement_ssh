@@ -7,7 +7,6 @@ RUN useradd -m student \
 && echo "student:password" | chpasswd \
 && adduser student sudo
 # Active l'authentification par mot de passe (temporaire pour le TP)
-RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config \
-&& sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config
+RUN sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
 EXPOSE 22
 CMD ["/usr/sbin/sshd", "-D"]
