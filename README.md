@@ -117,3 +117,53 @@ Vérifiez que le service SSH est bien démarré :
 $ sudo docker exec -it ssh-server ps aux | grep sshd
 root           1  0.0  0.0  12020  7936 ?        Ss   15:12   0:00 sshd: /usr/sb
 ```
+
+# Étape 2 — Construire l'image du client SSH
+
+1. Créez un fichier `Dockerfile.client` :
+
+```bash
+FROM ubuntu:24.04
+RUN apt update \
+&& apt install -y openssh-client vim iputils-ping
+WORKDIR /root
+CMD ["bash"]
+```
+
+2. Construisez puis lancez le conteneur client :
+
+```bash
+$ sudo docker build -t ssh-client -f Dockerfile.client .
+[+] Building 16.0s (7/7) FINISHED                                                                                                                 docker:default
+ => [internal] load build definition from Dockerfile.client                                                                                                 0.0s
+ => => transferring dockerfile: 155B                                                                                                                        0.0s
+ => [internal] load metadata for docker.io/library/ubuntu:24.04                                                                                             0.7s
+ => [internal] load .dockerignore                                                                                                                           0.0s
+ => => transferring context: 2B                                                                                                                             0.0s
+ => CACHED [1/3] FROM docker.io/library/ubuntu:24.04@sha256:66460d557b25769b102175144d538d88219c077c678a49af4afca6fbfc1b5252                                0.0s
+ => [2/3] RUN apt update && apt install -y openssh-client vim iputils-ping                                                                                 14.0s
+ => [3/3] WORKDIR /root                                                                                                                                     0.0s 
+ => exporting to image                                                                                                                                      1.2s 
+ => => exporting layers                                                                                                                                     1.1s 
+ => => writing image sha256:6889010dc65789c9153bc864ab32ff029808fe0f61158e336a76d0b4fafae5fa                                                                0.0s 
+ => => naming to docker.io/library/ssh-client                         
+```
+
+```bash
+$ sudo docker run -it --rm --network ssh-net --name ssh-client ssh-client            
+root@2f7570d214d0:~# 
+```
+
+3. Depuis le terminal du client, vérifiez la connectivité réseau :
+
+```bash
+root@2f7570d214d0:~# ping -c 2 ssh-server
+PING ssh-server (172.18.0.2) 56(84) bytes of data.
+64 bytes from ssh-server.ssh-net (172.18.0.2): icmp_seq=1 ttl=64 time=0.222 ms
+64 bytes from ssh-server.ssh-net (172.18.0.2): icmp_seq=2 ttl=64 time=0.053 ms
+
+--- ssh-server ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1001ms
+rtt min/avg/max/mdev = 0.053/0.137/0.222/0.084 ms
+root@2f7570d214d0:~# 
+```
