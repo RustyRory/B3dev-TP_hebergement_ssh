@@ -278,4 +278,71 @@ Vérifiez sur le serveur que la clé a été enregistrée :
 $ cat ~/.ssh/authorized_keys
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDAGgbOeITWoqhDIKGL7iAcLV8oQTZfNG7t3zsoHQz4UgEwJkCdvpzXXd9p92qJRy0nfh1PN/wcvaYrOkP1MmnrFur+8ECb3GQpeBP/TO8bIdSdwN/Haazk4jdYzCbEu+2A0L7f63iC+F2mYsEXrd4+FLgbciYmXPo51M58zYqSS7++JF29sf4cjV8vA+eaMmwqpaQU9Vfpz+OiHr/O43+/SueaWM3x+sy+1O/G4bcq1Gb6LPH4u+O38n4W0QEH+WkA9ralcEkvJKqSYEbQJqJpflyZUdkRI3KxInMEgIfaVxnHoKaWD81FwAysstxNdDx7LddEdtqYh484r61QU4yTaS9NNMPvVCyW1H25UIYY2h3BpJGGKTtSwfR+Cfk59N92j4B8KkEH0e6djnOwUt+4sbNLGJXzsnOof+Ax+dvMCLId5VxPCj3IqGaLbwObQakxtrCz4vG3v7s+visrdJy+y3pqPMSxt811kAIgI7aaE2yiKBPgoRwMoTzcARbdWo4Jgd6WbY+hbn71DPHjcKFPCTUIvOHrGqVMd95/mZj50NRBpFOsU8EkaKLHSfxCiEbnrhFtQxE3nVCqWHdLZj7kCrGaOrXc63H5AEnBHd33JHZuxHqjrvWfcD2u+AXDzUnH7Y2Y000rdP2OyCWyTsUT3gsNxWKsLifK7GJDW3qeRw== student@docker
 ```
+# Étape 5 — Sécuriser le serveur et automatiser la configuration
 
+Modifiez `Dockerfile.server` pour désactiver l'authentification par mot de passe :
+
+```bash
+RUN sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+```
+
+Reconstruisez et relancez le conteneur serveur :
+
+```bash
+docker stop ssh-server && docker rm ssh-server
+```
+
+```bash
+$ sudo docker build -t ssh-server:secure -f Dockerfile.server .
+[+] Building 1.1s (8/8) FINISHED                                                                                                                  docker:default
+ => [internal] load build definition from Dockerfile.server                                                                                                 0.0s
+ => => transferring dockerfile: 472B                                                                                                                        0.0s
+ => [internal] load metadata for docker.io/library/ubuntu:24.04                                                                                             0.7s
+ => [internal] load .dockerignore                                                                                                                           0.0s
+ => => transferring context: 2B                                                                                                                             0.0s
+ => [1/4] FROM docker.io/library/ubuntu:24.04@sha256:66460d557b25769b102175144d538d88219c077c678a49af4afca6fbfc1b5252                                       0.0s
+ => CACHED [2/4] RUN apt update && apt install -y openssh-server sudo && mkdir /var/run/sshd                                                                0.0s
+ => CACHED [3/4] RUN useradd -m student && echo "student:password" | chpasswd && adduser student sudo                                                       0.0s
+ => [4/4] RUN sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config                                                         0.2s
+ => exporting to image                                                                                                                                      0.1s
+ => => exporting layers                                                                                                                                     0.0s
+ => => writing image sha256:27e05af33bde724fda5ffa383be8c626a4e05527bec37515f4c93824eb0e698a                                                                0.0s
+ => => naming to docker.io/library/ssh-server:secure 
+ 
+```
+
+```bash
+$ sudo docker run -d --name ssh-server --network ssh-net ssh-server:secure
+e40e7f0d7c0a3aff773f0d6939f14ef4e8298b025f0554902b8d40e58a300ab0
+```
+
+Vérifiez que la connexion fonctionne uniquement via la clé :
+
+```bash
+root@769d27ae4b9c:~# ssh student@ssh-server
+The authenticity of host 'ssh-server (172.18.0.2)' can't be established.
+ED25519 key fingerprint is SHA256:EIaFXNDSzeEFV5NPVhpVl5FHGZYj0BfpCFWuqIc6uio.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added 'ssh-server' (ED25519) to the list of known hosts.
+student@ssh-server's password: 
+Welcome to Ubuntu 24.04.3 LTS (GNU/Linux 6.8.0-87-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+This system has been minimized by removing packages and content that are
+not required on a system that users do not log into.
+
+To restore this content, you can run the 'unminimize' command.
+
+The programs included with the Ubuntu system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by
+applicable law.
+
+$ 
+```
