@@ -1,0 +1,13 @@
+FROM ubuntu:24.04
+RUN apt update \
+&& apt install -y openssh-server sudo \
+&& mkdir /var/run/sshd
+# Crée un utilisateur non-root "student"
+RUN useradd -m student \
+&& echo "student:password" | chpasswd \
+&& adduser student sudo
+# Active l'authentification par mot de passe (temporaire pour le TP)
+RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config \
+&& sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]
